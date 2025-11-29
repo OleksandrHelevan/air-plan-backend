@@ -1,0 +1,42 @@
+services:
+  plane-db:
+    image: postgres:15-alpine
+    container_name: ${POSTGRES_PLANE_DB_HOST}
+    ports:
+      - "${PLANE_DB_HOST_PORT}:${POSTGRES_INTERNAL_PORT}"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${PLANE_DB}
+    volumes:
+      - plane-data:/var/lib/postgresql/data
+    networks:
+      - air-plan-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${PLANE_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  plane-service:
+    build: ./plane-service
+    container_name: plane-service
+    ports:
+      - "${PLANE_SERVICE_PORT}:${PLANE_SERVICE_PORT}"
+    environment:
+      - SERVER_PORT=${PLANE_SERVICE_PORT}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://${POSTGRES_PLANE_DB_HOST}:${POSTGRES_INTERNAL_PORT}/${PLANE_DB}
+    depends_on:
+      plane-db:
+        condition: service_healthy
+    networks:
+      - air-plan-network
+
+networks:
+  air-plan-network:
+    driver: bridge
+
+volumes:
+  plane-data:
