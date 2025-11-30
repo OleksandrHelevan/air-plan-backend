@@ -3,6 +3,7 @@ package com.airplan.planeservice.api;
 import com.airplan.planeservice.application.plane.CreatePlaneRequest;
 import com.airplan.planeservice.application.plane.PlaneResponse;
 import com.airplan.planeservice.domains.plane.PlaneService;
+import com.airplan.planeservice.domains.plane.PlaneStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,5 +27,14 @@ public class PlaneController {
     public ResponseEntity<PlaneResponse> getPlane(@PathVariable UUID planeId) {
         PlaneResponse planeResponse = planeService.getPlane(planeId);
         return new ResponseEntity<>(planeResponse, HttpStatus.OK);
+    }
+
+    @PatchMapping("/{planeId}/status")
+    public ResponseEntity<PlaneResponse> changePlaneStatus(
+            @PathVariable UUID planeId,
+            @RequestParam(required = false) PlaneStatus newStatus
+    ) {
+        PlaneResponse updatedPlane = planeService.changeStatus(planeId, newStatus);
+        return new ResponseEntity<>(updatedPlane, HttpStatus.OK);
     }
 }

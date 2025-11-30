@@ -7,6 +7,7 @@ import com.airplan.planeservice.core.persistence.PlaneRepository;
 import com.airplan.planeservice.core.util.ErrorMessage;
 import com.airplan.planeservice.domains.plane.PlaneFactory;
 import com.airplan.planeservice.domains.plane.PlaneService;
+import com.airplan.planeservice.domains.plane.PlaneStatus;
 import com.airplan.planeservice.exception.PlaneNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -34,5 +35,20 @@ public class PlaneServiceImpl implements PlaneService {
         Plane plane = planeRepository.findById(planeId)
                 .orElseThrow(() -> new PlaneNotFoundException(ErrorMessage.PLANE_NOT_FOUND));
         return planeMapper.toDto(plane);
+    }
+
+    @Override
+    @Transactional
+    public PlaneResponse changeStatus(UUID planeId, PlaneStatus newStatus) {
+        Plane plane = planeRepository.findById(planeId)
+                .orElseThrow(() -> new PlaneNotFoundException(ErrorMessage.PLANE_NOT_FOUND));
+
+        if (newStatus != null) {
+            plane.setStatus(newStatus);
+        } else {
+            plane.getStatus().performAction(plane);
+        }
+
+        return planeMapper.toDto(planeRepository.save(plane));
     }
 }

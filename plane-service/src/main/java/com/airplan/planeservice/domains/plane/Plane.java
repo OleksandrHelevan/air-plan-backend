@@ -41,4 +41,6 @@ public class Plane {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "airline_id", foreignKey = @ForeignKey(name = "fk_planes_airlines"))
     private Airline airline;
+
+
 }

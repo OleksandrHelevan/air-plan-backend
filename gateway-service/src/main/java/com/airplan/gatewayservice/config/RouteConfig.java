@@ -14,6 +14,10 @@ public class RouteConfig {
                         predicate.path("/planes/**", "/airlines/**")
                                 .uri("lb://plane-service")
                 )
+                .route("flight-service", predicate ->
+                        predicate.path("/flights/**")
+                                .uri("lb://flight-service")
+                )
                 .build();
     }
 }

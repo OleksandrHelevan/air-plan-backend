@@ -1,0 +1,51 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-flight-segments-table
+      author: oleksandr
+      changes:
+        - createTable:
+            tableName: flight_segments
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: from
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: to
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: price
+                  type: DOUBLE PRECISION
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: duration
+                  type: BIGINT
+                  remarks: "duration in seconds"
+
+              - column:
+                  name: flight_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: flight_segments
+            baseColumnNames: flight_id
+            referencedTableName: flights
+            referencedColumnNames: id
+            constraintName: fk_flight_segment_flight
+            onDelete: CASCADE

@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-flights-table
+      author: oleksandr
+      changes:
+        - createTable:
+            tableName: flights
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: code
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
