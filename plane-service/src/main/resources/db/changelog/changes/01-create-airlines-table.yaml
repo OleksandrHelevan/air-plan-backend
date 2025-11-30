@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: 01-create-airlines-table
+      author: oleksandr
+      changes:
+        - createTable:
+            tableName: airlines
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: name
+                  type: varchar(150)
+                  constraints:
+                    nullable: false
+                    unique: true
+
+              - column:
+                  name: country
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: app_rating
+                  type: decimal(2,1)
+                  constraints:
+                    nullable: true
+
+              - column:
+                  name: founded_year
+                  type: int
+
+              - column:
+                  name: description
+                  type: TEXT
+                  constraints:
+                    nullable: true

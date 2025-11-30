@@ -1,0 +1,68 @@
+databaseChangeLog:
+  - changeSet:
+      id: 02-create-planes-table
+      author: oleksandr
+      changes:
+        - createTable:
+            tableName: planes
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: model
+                  type: varchar(150)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: manufacturer
+                  type: varchar(150)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: seat_count
+                  type: int
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: range_km
+                  type: int
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: production_year
+                  type: int
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: status
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+                    checkConstraint: "status IN (
+                      'NO_SEATS_AVAILABLE',
+                      'IN_FLIGHT',
+                      'REPAIR',
+                      'INSPECTION',
+                      'OUT_OF_SERVICE',
+                      'RESERVED',
+                      'DECOMMISSIONED',
+                      'FREE_TO_USE'
+                    )"
+
+              - column:
+                  name: airline_id
+                  type: UUID
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_planes_airlines
+                    references: airlines(id)

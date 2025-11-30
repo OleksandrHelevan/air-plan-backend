@@ -1,0 +1,115 @@
+services:
+  plane-db:
+    image: postgres:15-alpine
+    container_name: ${POSTGRES_PLANE_DB_HOST}
+    ports:
+      - "${PLANE_DB_HOST_PORT}:${POSTGRES_INTERNAL_PORT}"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${PLANE_DB}
+    volumes:
+      - plane-data:/var/lib/postgresql/data
+    networks:
+      - air-plan-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${PLANE_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  flight-db:
+    image: postgres:15-alpine
+    container_name: ${POSTGRES_FLIGHT_DB_HOST}
+    ports:
+      - "${FLIGHT_DB_HOST_PORT}:${POSTGRES_INTERNAL_PORT}"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${FLIGHT_DB}
+    volumes:
+      - flight-data:/var/lib/postgresql/data
+    networks:
+      - air-plan-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${FLIGHT_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  discovery-service:
+    build: ./discovery-service
+    container_name: discovery-service
+    ports:
+      - "${DISCOVERY_SERVICE_PORT}:${DISCOVERY_SERVICE_PORT}"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - SERVER_PORT=${DISCOVERY_SERVICE_PORT}
+    networks:
+      - air-plan-network
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "${DISCOVERY_SERVICE_PORT}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  gateway-service:
+    build: ./gateway-service
+    container_name: gateway-service
+    ports:
+      - "${GATEWAY_SERVICE_PORT}:${GATEWAY_SERVICE_PORT}"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE}
+      - SERVER_PORT=${GATEWAY_SERVICE_PORT}
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+    networks:
+      - air-plan-network
+
+  plane-service:
+    build: ./plane-service
+    container_name: plane-service
+    ports:
+      - "${PLANE_SERVICE_PORT}:${PLANE_SERVICE_PORT}"
+    environment:
+      - SERVER_PORT=${PLANE_SERVICE_PORT}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://${POSTGRES_PLANE_DB_HOST}:${POSTGRES_INTERNAL_PORT}/${PLANE_DB}
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE}
+    depends_on:
+      plane-db:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+    networks:
+      - air-plan-network
+
+  flight-service:
+    build: ./flight-service
+    container_name: flight-service
+    ports:
+      - "${FLIGHT_SERVICE_PORT}:${FLIGHT_SERVICE_PORT}"
+    environment:
+      - SERVER_PORT=${FLIGHT_SERVICE_PORT}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://${POSTGRES_FLIGHT_DB_HOST}:${POSTGRES_INTERNAL_PORT}/${FLIGHT_DB}
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE}
+    depends_on:
+      flight-db:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+    networks:
+      - air-plan-network
+
+networks:
+  air-plan-network:
+    driver: bridge
+
+volumes:
+  plane-data:
+  flight-data:
